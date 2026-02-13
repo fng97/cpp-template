@@ -2,6 +2,11 @@
     .name = .cpp_template,
     .version = "0.0.1",
     .minimum_zig_version = "0.15.2",
-    .paths = .{""},
+    .paths = .{
+        "LICENSE",
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
     .fingerprint = 0x73dbe1b1173d6866,
 }
