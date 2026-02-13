@@ -1,6 +1,12 @@
 .{
     .name = .cpp_template,
     .version = "0.0.1",
+    .dependencies = .{
+        .googletest = .{
+            .url = "git+https://github.com/allyourcodebase/googletest#e2affdd13730f800aa63772039f2adfa971461b6",
+            .hash = "googletest-1.15.2-vLU55gAVAAC86GD--lNpG3oVHLsJhdB0lFCOCsBEbiAE",
+        },
+    },
     .minimum_zig_version = "0.15.2",
     .paths = .{
         "LICENSE",
