@@ -6,6 +6,10 @@
             .url = "git+https://github.com/allyourcodebase/googletest#e2affdd13730f800aa63772039f2adfa971461b6",
             .hash = "googletest-1.15.2-vLU55gAVAAC86GD--lNpG3oVHLsJhdB0lFCOCsBEbiAE",
         },
+        .benchmark = .{
+            .url = "git+https://github.com/allyourcodebase/benchmark#f5f368d65c3367e3b26eda4efac0fbbf85bd3078",
+            .hash = "benchmark-1.9.5-YtTVVTgSAADbq0a5luKMsV9uLuf1swBAO05pnug1HrzJ",
+        },
     },
     .minimum_zig_version = "0.15.2",
     .paths = .{
