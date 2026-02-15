@@ -84,9 +84,30 @@ pub fn build(b: *std.Build) !void {
     if (b.args) |args| gbench_run.addArgs(args);
     gbench_step.dependOn(&gbench_run.step);
 
-    const test_step = b.step("test", "Run all tests");
-    test_step.dependOn(&gtest_run.step);
-    const gbench_run_fast = b.addRunArtifact(gbench_exe);
-    gbench_run_fast.addArgs(&.{"--benchmark_min_time=0s"}); // only one iteration per benchmark
-    test_step.dependOn(&gbench_run_fast.step);
+    // TODO: Fetch clang-format with build system.
+    const fmt_step = b.step("fmt", "Format C/C++ files with clang-format");
+    const git_ls_cmd = b.addSystemCommand(&.{ "git", "ls-files", "*.[ch]pp", "*.[ch]" });
+    const files_list = git_ls_cmd.captureStdOut();
+    const clang_format_cmd = b.addSystemCommand(&.{ "clang-format", "-i" }); // modify inplace
+    clang_format_cmd.addPrefixedFileArg("--files=", files_list);
+    fmt_step.dependOn(&clang_format_cmd.step);
+
+    const test_step = b.step("test", "Run all checks");
+    const gtest_check_exe = b.addRunArtifact(gtest_exe);
+    gtest_check_exe.addArg("--gtest_brief=1");
+    gtest_check_exe.expectExitCode(0); // hides stdout/stderr when tests pass
+    test_step.dependOn(&gtest_check_exe.step);
+    const gbench_check_exe = b.addRunArtifact(gbench_exe);
+    gbench_check_exe.addArg("--benchmark_min_time=0s"); // fast: only one iteration per benchmark
+    gbench_check_exe.expectExitCode(0);
+    test_step.dependOn(&gbench_check_exe.step);
+    // `zig build fmt` formats the code. This just checks whether or not it's formatted.
+    const clang_format_check_cmd = b.addSystemCommand(&.{
+        "clang-format",
+        "--dry-run",
+        "--Werror",
+    });
+    clang_format_check_cmd.addPrefixedFileArg("--files=", files_list);
+    clang_format_check_cmd.expectExitCode(0);
+    test_step.dependOn(&clang_format_check_cmd.step);
 }
