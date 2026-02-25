@@ -100,6 +100,7 @@ pub fn build(b: *std.Build) !void {
     const gbench_check_exe = b.addRunArtifact(gbench_exe);
     gbench_check_exe.addArg("--benchmark_min_time=0s"); // fast: only one iteration per benchmark
     gbench_check_exe.expectExitCode(0);
+    _ = gbench_check_exe.captureStdErr(); // hide benchmark stderr output
     test_step.dependOn(&gbench_check_exe.step);
     // `zig build fmt` formats the code. This just checks whether or not it's formatted.
     const clang_format_check_cmd = b.addSystemCommand(&.{
