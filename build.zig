@@ -4,8 +4,8 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const googletest_dep = b.dependency("googletest", .{});
-    const benchmark_dep = b.dependency("benchmark", .{});
+    const googletest_dep = b.dependency("googletest", .{ .target = target, .optimize = optimize });
+    const benchmark_dep = b.dependency("benchmark", .{ .target = target, .optimize = optimize });
 
     var flags = std.ArrayList([]const u8){};
     defer flags.deinit(b.allocator);
