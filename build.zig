@@ -4,8 +4,16 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const run_step = b.step("run", "Run the main executable");
+    const gtest_step = b.step("gtest", "Run googletest");
+    const gbench_step = b.step("gbench", "Run google benchmark");
+    const test_step = b.step("test", "Run all checks");
+    const fmt_step = b.step("fmt", "Format C/C++ files with clang-format");
+
     const googletest_dep = b.dependency("googletest", .{ .target = target, .optimize = optimize });
     const benchmark_dep = b.dependency("benchmark", .{ .target = target, .optimize = optimize });
+    const clang_tools_dep =
+        b.lazyDependency("clang_tools", .{ .target = b.graph.host }) orelse return;
 
     var flags = std.ArrayList([]const u8){};
     defer flags.deinit(b.allocator);
@@ -39,11 +47,10 @@ pub fn build(b: *std.Build) !void {
     });
     exe.root_module.addCSourceFiles(.{ .files = &.{"src/main.cpp"}, .flags = flags.items });
     exe.linkLibrary(lib);
-    b.installArtifact(exe);
-    const run_step = b.step("run", "Run the app");
+    b.installArtifact(exe); // install step installs this exe to prefix/bin
     const run_cmd = b.addRunArtifact(exe);
     run_step.dependOn(&run_cmd.step);
-    run_cmd.step.dependOn(b.getInstallStep());
+    run_cmd.step.dependOn(b.getInstallStep()); // also install artefacts when we run `zig build run`
 
     const gtest_exe = b.addExecutable(.{
         .name = "gtest",
@@ -59,11 +66,16 @@ pub fn build(b: *std.Build) !void {
     gtest_exe.linkLibrary(lib);
     gtest_exe.linkLibrary(googletest_dep.artifact("gtest"));
     gtest_exe.linkLibrary(googletest_dep.artifact("gtest_main"));
-    const gtest_step = b.step("gtest", "Run gtest");
     const gtest_run = b.addRunArtifact(gtest_exe);
     gtest_run.addArg("--gtest_brief=1");
     if (b.args) |args| gtest_run.addArgs(args);
     gtest_step.dependOn(&gtest_run.step);
+
+    // Also add googletest tests to `zig build test` step.
+    const gtest_check_exe = b.addRunArtifact(gtest_exe);
+    gtest_check_exe.addArg("--gtest_brief=1");
+    gtest_check_exe.expectExitCode(0); // hides stdout when tests pass
+    test_step.dependOn(&gtest_check_exe.step);
 
     const gbench_exe = b.addExecutable(.{
         .name = "gbench",
@@ -79,36 +91,36 @@ pub fn build(b: *std.Build) !void {
     gbench_exe.linkLibrary(lib);
     gbench_exe.linkLibrary(benchmark_dep.artifact("benchmark"));
     gbench_exe.linkLibrary(benchmark_dep.artifact("benchmark_main"));
-    const gbench_step = b.step("gbench", "Run gbench benchmarks");
     const gbench_run = b.addRunArtifact(gbench_exe);
     if (b.args) |args| gbench_run.addArgs(args);
     gbench_step.dependOn(&gbench_run.step);
 
-    // TODO: Fetch clang-format with build system.
-    const fmt_step = b.step("fmt", "Format C/C++ files with clang-format");
-    const git_ls_cmd = b.addSystemCommand(&.{ "git", "ls-files", "*.[ch]pp", "*.[ch]" });
-    const files_list = git_ls_cmd.captureStdOut();
-    const clang_format_cmd = b.addSystemCommand(&.{ "clang-format", "-i" }); // modify inplace
-    clang_format_cmd.addPrefixedFileArg("--files=", files_list);
-    fmt_step.dependOn(&clang_format_cmd.step);
-
-    const test_step = b.step("test", "Run all checks");
-    const gtest_check_exe = b.addRunArtifact(gtest_exe);
-    gtest_check_exe.addArg("--gtest_brief=1");
-    gtest_check_exe.expectExitCode(0); // hides stdout/stderr when tests pass
-    test_step.dependOn(&gtest_check_exe.step);
+    // Also add a quick run of the Google Benchmark benchmarks to `zig build test`.
     const gbench_check_exe = b.addRunArtifact(gbench_exe);
     gbench_check_exe.addArg("--benchmark_min_time=0s"); // fast: only one iteration per benchmark
     gbench_check_exe.expectExitCode(0);
-    _ = gbench_check_exe.captureStdErr(); // hide benchmark stderr output
+    _ = gbench_check_exe.captureStdErr(); // hide stderr
     test_step.dependOn(&gbench_check_exe.step);
-    // `zig build fmt` formats the code. This just checks whether or not it's formatted.
-    const clang_format_check_cmd = b.addSystemCommand(&.{
-        "clang-format",
-        "--dry-run",
-        "--Werror",
-    });
+
+    // Save list of C/C++ files to format to a file.
+    const git_ls_cmd = b.addSystemCommand(&.{ "git", "ls-files", "*.[ch]pp", "*.[ch]" });
+    const files_list = git_ls_cmd.captureStdOut();
+
+    // Format the C/C++ code in-place with clang-format with `zig build fmt`.
+    const clang_format_cmd = std.Build.Step.Run.create(b, "clang-format");
+    const clang_format_bin =
+        clang_tools_dep.builder.named_lazy_paths.get("clang-format") orelse return;
+    clang_format_cmd.addFileArg(clang_format_bin);
+    clang_format_cmd.addArg("-i");
+    clang_format_cmd.addPrefixedFileArg("--files=", files_list);
+    fmt_step.dependOn(&clang_format_cmd.step);
+
+    // Add checking the C/C++ code formatting with clang-format to `zig build test`.
+    const clang_format_check_cmd = std.Build.Step.Run.create(b, &.{});
+    clang_format_check_cmd.addFileArg(clang_format_bin);
+    clang_format_check_cmd.addArgs(&.{ "--dry-run", "--Werror" });
     clang_format_check_cmd.addPrefixedFileArg("--files=", files_list);
     clang_format_check_cmd.expectExitCode(0);
+    _ = clang_format_check_cmd.captureStdErr();
     test_step.dependOn(&clang_format_check_cmd.step);
 }
