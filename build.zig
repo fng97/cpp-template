@@ -12,10 +12,9 @@ pub fn build(b: *std.Build) !void {
 
     const googletest_dep = b.dependency("googletest", .{ .target = target, .optimize = optimize });
     const benchmark_dep = b.dependency("benchmark", .{ .target = target, .optimize = optimize });
-    const clang_tools_dep =
-        b.lazyDependency("clang_tools", .{ .target = b.graph.host }) orelse return;
+    const clang_tools_dep = b.dependency("clang_tools", .{ .target = b.graph.host });
 
-    var flags = std.ArrayList([]const u8){};
+    var flags: std.ArrayList([]const u8) = .empty;
     defer flags.deinit(b.allocator);
     try flags.appendSlice(b.allocator, &.{
         "-std=c++20",
@@ -28,12 +27,18 @@ pub fn build(b: *std.Build) !void {
 
     const lib = b.addLibrary(.{
         .name = "lib",
-        .root_module = b.createModule(.{ .target = target, .optimize = optimize }),
+        .root_module = b.createModule(.{
+            .target = target,
+            .optimize = optimize,
+            // .link_libc = true,
+            // .link_libcpp = true,
+        }),
     });
     lib.root_module.addCSourceFiles(.{
+        .root = b.path("src"),
         // Source files go here.
         .files = &.{
-            "src/lib.cpp",
+            "lib.cpp",
         },
         .flags = flags.items,
     });
@@ -57,9 +62,10 @@ pub fn build(b: *std.Build) !void {
         .root_module = b.createModule(.{ .target = target, .optimize = optimize }),
     });
     gtest_exe.root_module.addCSourceFiles(.{
+        .root = b.path("src"),
         // Test files go here.
         .files = &.{
-            "src/test.cpp",
+            "test.cpp",
         },
         .flags = flags.items,
     });
@@ -82,9 +88,10 @@ pub fn build(b: *std.Build) !void {
         .root_module = b.createModule(.{ .target = target, .optimize = optimize }),
     });
     gbench_exe.root_module.addCSourceFiles(.{
+        .root = b.path("src"),
         // Benchmark files go here.
         .files = &.{
-            "src/benchmark.cpp",
+            "benchmark.cpp",
         },
         .flags = flags.items,
     });
