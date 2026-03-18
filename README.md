@@ -7,18 +7,18 @@ A zero-dependency C++ project template. [Zig](https://ziglang.org) replaces the 
 
 Create a repo from this template using _Use this template_ above, or clone the repo:
 
-```sh
+```console
 $ git clone https://github.com/fng97/cpp-template.git
 ```
 
 Install Zig using the polyglot script ([copied from
 TigerBeetle](https://github.com/tigerbeetle/tigerbeetle/blob/main/zig/download.ps1)):
 
-```sh
+```console
 $ ./zig/download.ps1  # linux/macos
 ```
 
-```ps1
+```console
 $ .\zig\download.ps1  # windows
 ```
 
@@ -26,7 +26,7 @@ $ .\zig\download.ps1  # windows
 
 On Windows, use `.\zig\zig.exe` instead of `./zig/zig`.
 
-```plaintext
+```console
 $ ./zig/zig build --help
 Usage: /path/to/zig/zig build [steps] [options]
 
