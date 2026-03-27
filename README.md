@@ -44,7 +44,8 @@ $ ./zig/zig build test  # runs tests, benchmarks, and checks formatting
 
 ## Bundled Packages
 
-This project includes three common packages:
+This project includes three common C++ packages that have been ported to Zig
+(see [`build.zig.zon`](./build.zig.zon)):
 [googletest](https://github.com/allyourcodebase/googletest), [Google
 Benchmark](https://github.com/allyourcodebase/benchmark), and
-[`clang-format`](https://github.com/fng97/clang-tools). These are installed by the build system.
+[`clang-format`](https://github.com/fng97/clang-tools).
