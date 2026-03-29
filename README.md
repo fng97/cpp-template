@@ -1,33 +1,24 @@
 # C++ Template
 
-A zero-dependency C++ project template. [Zig](https://ziglang.org) replaces the usual tools: `gcc`,
-`cmake`, `ninja`, `ccache`.
+A C++ project template using [Zig](https://ziglang.org) for the build system
+instead of the usual tools: `clang`, `cmake`, `ninja`, and `ccache`.
 
-## Setup
+The template bundles your typical C++ testing, benchmarking, and formatting
+dependencies (ported to Zig):
+[googletest](https://github.com/allyourcodebase/googletest), [Google
+Benchmark](https://github.com/allyourcodebase/benchmark), and
+[`clang-format`](https://github.com/fng97/clang-tools).
 
-Create a repo from this template using _Use this template_ above, or clone the repo:
+## Usage
 
-```console
-$ git clone https://github.com/fng97/cpp-template.git
-```
+[Install Zig](https://ziglang.org/learn/getting-started/). Check out
+[anyzig](https://github.com/marler8997/anyzig) if you want a single `zig`
+executable for all versions of Zig.
 
-Install Zig using the polyglot script ([copied from
-TigerBeetle](https://github.com/tigerbeetle/tigerbeetle/blob/main/zig/download.ps1)):
-
-```console
-$ ./zig/download.ps1  # linux/macos
-```
-
-```console
-$ .\zig\download.ps1  # windows
-```
-
-## Entrypoint
-
-On Windows, use `.\zig\zig.exe` instead of `./zig/zig`.
+The build system entrypoints are:
 
 ```console
-$ ./zig/zig build --help
+$ zig build --help
 Usage: /path/to/zig/zig build [steps] [options]
 
 Steps:
@@ -39,13 +30,5 @@ Steps:
   test                         Run all checks
   fmt                          Format C/C++ files with clang-format
 
-$ ./zig/zig build test  # runs tests, benchmarks, and checks formatting
+$ zig build test  # runs tests, benchmarks (single iter each), checks formatting
 ```
-
-## Bundled Packages
-
-This project includes three common C++ packages that have been ported to Zig
-(see [`build.zig.zon`](./build.zig.zon)):
-[googletest](https://github.com/allyourcodebase/googletest), [Google
-Benchmark](https://github.com/allyourcodebase/benchmark), and
-[`clang-format`](https://github.com/fng97/clang-tools).
