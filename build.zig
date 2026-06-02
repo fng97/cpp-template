@@ -43,10 +43,14 @@ pub fn build(b: *std.Build) !void {
     run_step.dependOn(blk: {
         const exe = b.addExecutable(.{
             .name = "main",
-            .root_module = b.createModule(.{ .target = target, .optimize = optimize }),
+            .root_module = b.createModule(.{
+                .target = target,
+                .optimize = optimize,
+                .link_libc = true, // for _start
+            }),
         });
         exe.root_module.addCSourceFiles(.{ .files = &.{"src/main.cpp"}, .flags = flags.items });
-        exe.linkLibrary(lib);
+        exe.root_module.linkLibrary(lib);
         b.installArtifact(exe); // install step installs this exe to prefix/bin
         const cmd = b.addRunArtifact(exe);
         cmd.step.dependOn(b.getInstallStep()); // also install artefacts when we run `zig build run`
@@ -64,12 +68,11 @@ pub fn build(b: *std.Build) !void {
             .files = &.{
                 "test.cpp",
             },
-            .flags = flags.items,
         });
-        exe.linkLibrary(lib);
+        exe.root_module.linkLibrary(lib);
         const dep = b.dependency("googletest", .{ .target = target, .optimize = optimize });
-        exe.linkLibrary(dep.artifact("gtest"));
-        exe.linkLibrary(dep.artifact("gtest_main"));
+        exe.root_module.linkLibrary(dep.artifact("gtest"));
+        exe.root_module.linkLibrary(dep.artifact("gtest_main"));
         break :blk exe;
     };
 
@@ -101,10 +104,10 @@ pub fn build(b: *std.Build) !void {
             },
             .flags = flags.items,
         });
-        exe.linkLibrary(lib);
+        exe.root_module.linkLibrary(lib);
         const dep = b.dependency("benchmark", .{ .target = target, .optimize = optimize });
-        exe.linkLibrary(dep.artifact("benchmark"));
-        exe.linkLibrary(dep.artifact("benchmark_main"));
+        exe.root_module.linkLibrary(dep.artifact("benchmark"));
+        exe.root_module.linkLibrary(dep.artifact("benchmark_main"));
         break :blk exe;
     };
 
@@ -119,7 +122,7 @@ pub fn build(b: *std.Build) !void {
         const cmd = b.addRunArtifact(gbench_exe);
         cmd.addArg("--benchmark_min_time=0s"); // fast: only one iteration per benchmark
         cmd.expectExitCode(0);
-        _ = cmd.captureStdErr(); // hide stderr
+        _ = cmd.captureStdErr(.{}); // hide stderr
         break :blk &cmd.step;
     });
 
@@ -129,7 +132,7 @@ pub fn build(b: *std.Build) !void {
         "ls-files",
         "*.[ch]pp",
         "*.[ch]",
-    }).captureStdOut();
+    }).captureStdOut(.{});
 
     const clang_format_exe = blk: {
         const dep = b.dependency("clang_tools", .{ .target = b.graph.host });
@@ -153,7 +156,7 @@ pub fn build(b: *std.Build) !void {
         cmd.addArgs(&.{ "--dry-run", "--Werror" });
         cmd.addPrefixedFileArg("--files=", files_list);
         cmd.expectExitCode(0);
-        _ = cmd.captureStdErr();
+        _ = cmd.captureStdErr(.{});
         break :blk &cmd.step;
     });
 }

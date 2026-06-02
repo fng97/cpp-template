@@ -1,21 +1,21 @@
 .{
     .name = .cpp_template,
-    .version = "0.0.1",
+    .version = "0.0.0",
     .dependencies = .{
         .googletest = .{
-            .url = "git+https://github.com/allyourcodebase/googletest#e2affdd13730f800aa63772039f2adfa971461b6",
-            .hash = "googletest-1.15.2-vLU55gAVAAC86GD--lNpG3oVHLsJhdB0lFCOCsBEbiAE",
+            .url = "git+https://github.com/fng97/googletest#ad11547b04c5c3cd7686a6c5c72d6747b4f97194",
+            .hash = "googletest-1.15.2-vLU55pAVAADd_J-vQKNwzEvPw695vo8YgmJmZyUkA0zX",
         },
         .benchmark = .{
-            .url = "git+https://github.com/allyourcodebase/benchmark#0abac88f7e03ea42497cd18201a77a9f6bdec76f",
-            .hash = "benchmark-1.9.5-YtTVVccSAABRSmhWiw0Y4kOL-zkt43IltBODFKYoThXt",
+            .url = "git+https://github.com/allyourcodebase/benchmark#d25e5ed2e86e443aa48fb16af2d5230289978ffd",
+            .hash = "benchmark-1.9.5-YtTVVfUSAAC3aoZ5MEeePoUSFF-2ibbAcC1-tOqAhZDa",
         },
         .clang_tools = .{
             .url = "git+https://github.com/fng97/clang-tools#9bb34f85bc4ec0680a253a46cdc06645c12742e5",
             .hash = "clang_tools-20.1.0-sP0RDzMPAAAbyDobHcJNeecPLVmePZPcBc7APbxdjK5g",
         },
     },
-    .minimum_zig_version = "0.15.2",
+    .minimum_zig_version = "0.16.0",
     .paths = .{
         "LICENSE",
         "build.zig",
